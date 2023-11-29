@@ -5,9 +5,9 @@ namespace Wifi.Linux.Sample.CSharp
     internal class Program
     {
         #region Interop
-        [DllImport("libWifi.Linux.Core.so", EntryPoint = "wrapper")]
+        [DllImport("libWifi.Linux.Core.so", EntryPoint = "ScanWifis")]
         [return: MarshalAs(UnmanagedType.I4)]
-        public static extern int wrapper(ref SCAN scan);
+        public static extern int ScanWifis(ref SCAN scan);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct SCAN
@@ -77,7 +77,7 @@ namespace Wifi.Linux.Sample.CSharp
             Console.ReadLine();
 
             SCAN scan = new SCAN();
-            var w = wrapper(ref scan);
+            var w = ScanWifis(ref scan);
             Console.WriteLine("Wrapper called : " + w);
 
             if (w == 1)

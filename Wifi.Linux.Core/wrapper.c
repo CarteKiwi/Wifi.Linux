@@ -2,7 +2,7 @@
 #include "../Wifi.Linux.Core/iwlib.h"
 #include "../Wifi.Linux.Core/wrapper.h"
 
-int wrapper(SCAN* scan) {
+int ScanWifis(SCAN* scan) {
 
 	wireless_scan_head head;
 	wireless_scan* result;
