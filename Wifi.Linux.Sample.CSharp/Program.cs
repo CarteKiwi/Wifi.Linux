@@ -1,10 +1,16 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections;
+using System.Runtime.InteropServices;
 
 namespace Wifi.Linux.Sample.CSharp
 {
     internal class Program
     {
         #region Interop
+        [DllImport("libWifi.Linux.Core.so", EntryPoint = "ExecuteCommand")]
+        [return: MarshalAs(UnmanagedType.I4)]
+        public static extern int ExecuteCommand(string command, ref OUTPUT output);
+
+
         [DllImport("libWifi.Linux.Core.so", EntryPoint = "ScanWifis")]
         [return: MarshalAs(UnmanagedType.I4)]
         public static extern int ScanWifis(ref SCAN scan);
@@ -17,6 +23,14 @@ namespace Wifi.Linux.Sample.CSharp
 
             [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.Struct, SizeConst = 10)]
             public WIFI[] wifi;
+        }
+
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct OUTPUT
+        {
+            [MarshalAs(UnmanagedType.LPArray)]
+            public byte[] stdout;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -75,6 +89,11 @@ namespace Wifi.Linux.Sample.CSharp
         {
             Console.WriteLine("Press a key to start");
             Console.ReadLine();
+
+            OUTPUT output = new OUTPUT();
+            ExecuteCommand("wpa_cli scan -i wlan0", ref output);
+            Console.WriteLine("Execute called : " + System.Text.Encoding.UTF8.GetString(output.stdout));
+
 
             SCAN scan = new SCAN();
             var w = ScanWifis(ref scan);
