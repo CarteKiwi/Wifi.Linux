@@ -12,101 +12,6 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
-int createChild(const char* szCommand, char* const aArguments[], char* const aEnvironment[], const char* szMessage) {
-	int aStdinPipe[2];
-	int aStdoutPipe[2];
-	int nChild;
-	char nChar;
-	int nResult;
-
-	if (pipe(aStdinPipe) < 0) {
-		perror("allocating pipe for child input redirect");
-		return -1;
-	}
-	if (pipe(aStdoutPipe) < 0) {
-		close(aStdinPipe[PIPE_READ]);
-		close(aStdinPipe[PIPE_WRITE]);
-		perror("allocating pipe for child output redirect");
-		return -1;
-	}
-
-	nChild = fork();
-	if (0 == nChild) {
-		// child continues here
-
-		// redirect stdin
-		if (dup2(aStdinPipe[PIPE_READ], STDIN_FILENO) == -1) {
-			exit(errno);
-		}
-
-		// redirect stdout
-		if (dup2(aStdoutPipe[PIPE_WRITE], STDOUT_FILENO) == -1) {
-			exit(errno);
-		}
-
-		// redirect stderr
-		if (dup2(aStdoutPipe[PIPE_WRITE], STDERR_FILENO) == -1) {
-			exit(errno);
-		}
-
-		// all these are for use by parent only
-		close(aStdinPipe[PIPE_READ]);
-		close(aStdinPipe[PIPE_WRITE]);
-		close(aStdoutPipe[PIPE_READ]);
-		close(aStdoutPipe[PIPE_WRITE]);
-
-		// run child process image
-		// replace this with any exec* function find easier to use ("man exec")
-		nResult = execve(szCommand, aArguments, aEnvironment);
-
-		// if we get here at all, an error occurred, but we are in the child
-		// process, so just exit
-		exit(nResult);
-	}
-	else if (nChild > 0) {
-		// parent continues here
-
-		// close unused file descriptors, these are for child only
-		close(aStdinPipe[PIPE_READ]);
-		close(aStdoutPipe[PIPE_WRITE]);
-
-		while (1) {
-			int nRead = 0;
-
-			// Include error check here
-			if (NULL != szMessage) {
-				printf("\nsending hello message...\n");
-				write(aStdinPipe[PIPE_WRITE], szMessage, strlen(szMessage));
-			}
-
-			// Just a char by char read here, you can change it accordingly
-			while (read(aStdoutPipe[PIPE_READ], &nChar, 1) == 1) {
-				nRead++;
-				write(STDOUT_FILENO, &nChar, 1);
-
-				if (nRead >= strlen(szMessage)) {
-					// read the entire echo of the message, send another one
-					break;
-				}
-			}
-			sleep(1);
-		}
-
-		// done with these in this example program, you would normally keep these
-		// open of course as long as you want to talk to the child
-		close(aStdinPipe[PIPE_WRITE]);
-		close(aStdoutPipe[PIPE_READ]);
-	}
-	else {
-		// failed to create child
-		close(aStdinPipe[PIPE_READ]);
-		close(aStdinPipe[PIPE_WRITE]);
-		close(aStdoutPipe[PIPE_READ]);
-		close(aStdoutPipe[PIPE_WRITE]);
-	}
-	return nChild;
-}
-
 int ScanWifis(SCAN* scan) {
 
 	wireless_scan_head head;
@@ -156,7 +61,6 @@ int ScanWifis(SCAN* scan) {
 	return 1;
 };
 
-
 char** split(char** argv, int* argc, char* string, const char delimiter)
 {
 	*argc = 0;
@@ -171,59 +75,6 @@ char** split(char** argv, int* argc, char* string, const char delimiter)
 		
 	} while (*string);
 	return argv;
-}
-
-char** extract_tokens(const char* command, int* num_tokens)
-{
-	char text[256];
-	strcpy(text, command);
-
-	//char** tokens = NULL;
-	//char* token;
-	//int count = 0;
-
-	//token = strtok(text, " ,.");
-
-	//while (token != NULL) {
-	//	tokens = realloc(tokens, (count + 1) * sizeof(char*));
-
-	//	//strcpy(tokens[count], token);
-	//	tokens[count] = strdup(token);
-	//
-	//	printf("%s\n", token);
-
-	//	count++;
-	//	token = strtok(NULL, " ,.");
-	//}
-
-	//tokens[count + 1] = NULL;
-	//*num_tokens = count + 1;
-	//return tokens;
-
-
-
-	char* copy[10];
-	char* pch = strtok(text, " ,.");
-
-	int i = 0;
-	while (pch != NULL)
-	{
-		printf("%s\n", pch);
-		strcpy(copy[i], pch);
-		pch = strtok(NULL, " ,.");
-		i++;
-	}
-	*num_tokens = i;
-	return copy;
-	/*char* args[i];
-	for (int j = 0; j < i; j++)
-	{
-		args[j] = copy[j];
-	}
-
-	*num_tokens = i;
-
-	return args;*/
 }
 
 char* qx(char** cmd, int inc_stderr) {
@@ -313,7 +164,6 @@ int ProcessCommand(const char* command, OUTPUT* output)
 
 	int num_tokens;
 	split(tokens, &num_tokens, command, ' ');
-	//char** tokens = extract_tokens(command, &num_tokens);
 
 	if (tokens != NULL) {
 		char* argv[num_tokens];
@@ -321,37 +171,13 @@ int ProcessCommand(const char* command, OUTPUT* output)
 		for (int i = 0; i < num_tokens; i++) {
 			printf("Token %d: %s\n", i + 1, tokens[i]);
 			argv[i] = tokens[i];
-			//free(tokens[i]);  // Free memory for each token
 		}
-
-		/*	char* argv[4];
-			argv[0] = "wpa_cli";
-			argv[1] = "scan";
-			argv[2] = "-i";
-			argv[3] = "wlan0";*/
 
 		char* out = qx(argv, 0);
 		printf("%s", out);
 		output->out = out;
 		free(out);
-		//free(tokens); // Free the array of tokens
 	}
-
-
-
-
-	//if (strlen(out) == strlen("OK\n"))
-	//{
-	//	free(out);
-	//	char* argv[3];
-	//	argv[0] = "wpa_cli";
-	//	argv[1] = "scan_result";
-	//	argv[2] = NULL;
-	//	char* out = execute(argv, 0);
-	//	printf("%s", out);
-	//}
-
-	//free(out);
 
 	return 0;
 }
