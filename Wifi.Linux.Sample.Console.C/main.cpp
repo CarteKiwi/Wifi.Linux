@@ -8,8 +8,6 @@ extern "C" {
 #include "../Wifi.Linux.Core/wrapper.h"
 }
 
-
-
 int main(void) {
 	/*SCAN* scanResult;
 
@@ -26,12 +24,15 @@ int main(void) {
 
 	printf("OUTPUT: %s", output.out);
 
-	//// WIP
-	////iwconfig_cmd cm = *find_command("essid GDM key _0123456789!");
-	////char* essid = ss.scans[0]->b.essid;
-	///*char* essid = "iPhone de Guillaume";
+	char tmp = *output.out;
 
-	//set_essid_info(sock, "wlan0", &essid, 1);*/
+	if (strcmp(&tmp, "OK"))
+	{
+		char cmd[] = "wpa_cli scan_results";
+		int res = ProcessCommand(cmd, &output);
+
+		printf("OUTPUT2: %s", output.out);
+	}
 
 	exit(0);
 }
