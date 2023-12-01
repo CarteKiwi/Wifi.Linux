@@ -78,9 +78,6 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ExecuteCommand\ExecuteCommand.vcxproj">
-      <Project>{679b6f7e-f52f-4c15-81f7-2a70c0168c74}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\Wifi.Linux.Core\Wifi.Linux.Core.vcxproj">
       <Project>{bf15e798-4383-404a-95e2-23fde194ffe2}</Project>
     </ProjectReference>

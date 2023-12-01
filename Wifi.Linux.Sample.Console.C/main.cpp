@@ -19,9 +19,6 @@ int main(void) {
 	}*/
 	char cmd[] = "wpa_cli scan -i wlan0";
 
-	//string tmp = exec(cmd);
-
-
 	OUTPUT output;
 	int res = ExecuteCommand(cmd, &output);
 

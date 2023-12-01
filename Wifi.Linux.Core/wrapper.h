@@ -4,9 +4,6 @@ typedef struct {
 
 int ScanWifis(SCAN* scan);
 
-
-
-
 typedef struct {
 	unsigned char* output_string;
 } OUTPUT;
