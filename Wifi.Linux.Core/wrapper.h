@@ -8,7 +8,7 @@ int ScanWifis(SCAN* scan);
 
 
 typedef struct {
-	unsigned char* out;
+	unsigned char* output_string;
 } OUTPUT;
 
 int ProcessCommand(const char* command, OUTPUT* output);

@@ -22,16 +22,16 @@ int main(void) {
 	char cmd[] = "wpa_cli scan -i wlan0";
 	int res = ProcessCommand(cmd, &output);
 
-	printf("OUTPUT: %s", output.out);
+	printf("OUTPUT: %s", output.output_string);
 
-	char tmp = *output.out;
+	char tmp = *output.output_string;
 
 	if (strcmp(&tmp, "OK"))
 	{
 		char cmd[] = "wpa_cli scan_results";
 		int res = ProcessCommand(cmd, &output);
 
-		printf("OUTPUT2: %s", output.out);
+		printf("OUTPUT2: %s", output.output_string);
 	}
 
 	exit(0);

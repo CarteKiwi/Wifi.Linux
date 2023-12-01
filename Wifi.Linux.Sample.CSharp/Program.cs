@@ -30,7 +30,7 @@ namespace Wifi.Linux.Sample.CSharp
         public struct OUTPUT
         {
             [MarshalAs(UnmanagedType.LPArray)]
-            public byte[] stdout;
+            public byte[] outputString;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -95,17 +95,17 @@ namespace Wifi.Linux.Sample.CSharp
             Console.WriteLine("Execute called : " + System.Text.Encoding.UTF8.GetString(output.stdout));
 
 
-            SCAN scan = new SCAN();
-            var w = ScanWifis(ref scan);
-            Console.WriteLine("Wrapper called : " + w);
+            //SCAN scan = new SCAN();
+            //var w = ScanWifis(ref scan);
+            //Console.WriteLine("Wrapper called : " + w);
 
-            if (w == 1)
-            {
-                foreach (var s in scan.scans)
-                {
-                    Console.WriteLine("ESSID: " + s.b.essid + " & Name: " + s.b.name);
-                }
-            }
+            //if (w == 1)
+            //{
+            //    foreach (var s in scan.scans)
+            //    {
+            //        Console.WriteLine("ESSID: " + s.b.essid + " & Name: " + s.b.name);
+            //    }
+            //}
         }
     }
 }

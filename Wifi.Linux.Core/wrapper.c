@@ -175,7 +175,7 @@ int ProcessCommand(const char* command, OUTPUT* output)
 
 		char* out = qx(argv, 0);
 		//printf("%s", out);
-		output->out = out;
+		output->output_string = out;
 		free(out);
 	}
 
