@@ -5,7 +5,13 @@ namespace Wifi.Linux.Sample.CSharp
 {
     internal class Program
     {
-        #region Interop
+        #region Interop  
+
+        [DllImport("libExecuteCommand.so", EntryPoint = "exec")]
+        [return: MarshalAs(UnmanagedType.LPStr)]
+        public static extern string exec([MarshalAs(UnmanagedType.LPStr)] string command);
+
+
         [DllImport("libWifi.Linux.Core.so", EntryPoint = "ExecuteCommand")]
         [return: MarshalAs(UnmanagedType.I4)]
         public static extern int ExecuteCommand(string command, ref OUTPUT output);
@@ -89,6 +95,12 @@ namespace Wifi.Linux.Sample.CSharp
         {
             Console.WriteLine("Press a key to start");
             Console.ReadLine();
+
+            //var s = exec("wpa_cli scan -i wlan0");
+            //Console.WriteLine(s);
+
+            //s = exec("wpa_cli scanresult");
+            //Console.WriteLine(s);
 
             OUTPUT output = new OUTPUT();
             ExecuteCommand("wpa_cli scan -i wlan0", ref output);

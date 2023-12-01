@@ -14,4 +14,4 @@ typedef struct {
 int ExecuteCommand(const char* command, OUTPUT* output);
 
 
-char* qx(char** cmd, int inc_stderr);
+char* qx(char** cmd);

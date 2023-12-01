@@ -17,9 +17,12 @@ int main(void) {
 	{
 		printf("ESSID: %s", scanResult->scans[j]->b.essid);
 	}*/
+	char cmd[] = "wpa_cli scan -i wlan0";
+
+	//string tmp = exec(cmd);
+
 
 	OUTPUT output;
-	char cmd[] = "wpa_cli scan -i wlan0";
 	int res = ExecuteCommand(cmd, &output);
 
 	printf("OUTPUT: %s", output.output_string);

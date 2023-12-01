@@ -8,6 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Update="libExecuteCommand.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="libWifi.Linux.Core.so">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
