@@ -85,14 +85,33 @@ char* qx(char** cmd, int inc_stderr) {
 	if (!inc_stderr) {
 		pipe(stderr_fds);
 	}
+	printf("A");
 
+	pid_t original = getpid();
 	const pid_t pid = fork();
-	if (!pid) {
+
+	if (pid == -1)
+	{
+		/* Failed to fork - one return */
+		printf("FAILED");
+	}
+	else if (pid == 0)
+	{
+		/* Child process - distinct from original process */
+		printf("CHILD");
+
+	}
+	else
+	{
+		/* Parent process - distinct from child process */
+		printf("PARENT");
+
 		close(stdout_fds[0]);
 		dup2(stdout_fds[1], 1);
 		if (inc_stderr) {
 			dup2(stdout_fds[1], 2);
 		}
+		printf("B");
 
 		close(stdout_fds[1]);
 
@@ -101,10 +120,18 @@ char* qx(char** cmd, int inc_stderr) {
 			dup2(stderr_fds[1], 2);
 			close(stderr_fds[1]);
 		}
+		printf("C");
 
 		execvp(*cmd, cmd);
 		exit(0);
 	}
+
+	if (!pid) {
+		/*printf("opid: %s", original);
+		printf("pid: %s", pid);*/
+		
+	}
+	printf("D");
 
 	close(stdout_fds[1]);
 
@@ -117,16 +144,19 @@ char* qx(char** cmd, int inc_stderr) {
 		if (r > 0) {
 			i += r;
 		}
+		printf("E");
 
 		if (out_size - i <= 4096) {
 			out_size *= 2;
 			out = realloc(out, out_size);
 		}
 	} while (errno == EAGAIN || errno == EINTR);
+	printf("F");
 
 	close(stdout_fds[0]);
 
 	if (!inc_stderr) {
+		printf("G");
 		close(stderr_fds[1]);
 		do {
 			const ssize_t r = read(stderr_fds[0], &out[i], buf_size);
@@ -144,18 +174,20 @@ char* qx(char** cmd, int inc_stderr) {
 
 		close(stderr_fds[0]);
 	}
+	printf("H");
 
 	int r, status;
 	do {
 		r = waitpid(pid, &status, 0);
 	} while (r == -1 && errno == EINTR);
+	printf("I");
 
 	out[i] = 0;
 
 	return out;
 }
 
-int ProcessCommand(const char* command, OUTPUT* output)
+int ExecuteCommand(const char* command, OUTPUT* output)
 {
 	printf("Processing command...\n");
 	printf("%s\n", command);
@@ -173,10 +205,10 @@ int ProcessCommand(const char* command, OUTPUT* output)
 			argv[i] = tokens[i];
 		}
 
-		char* out = qx(argv, 0);
-		//printf("%s", out);
+		char* out = qx(argv, 1);
+		printf("output: %s", out);
 		output->output_string = out;
-		free(out);
+		//free(out);
 	}
 
 	return 0;

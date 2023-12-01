@@ -20,7 +20,7 @@ int main(void) {
 
 	OUTPUT output;
 	char cmd[] = "wpa_cli scan -i wlan0";
-	int res = ProcessCommand(cmd, &output);
+	int res = ExecuteCommand(cmd, &output);
 
 	printf("OUTPUT: %s", output.output_string);
 
@@ -29,7 +29,7 @@ int main(void) {
 	if (strcmp(&tmp, "OK"))
 	{
 		char cmd[] = "wpa_cli scan_results";
-		int res = ProcessCommand(cmd, &output);
+		int res = ExecuteCommand(cmd, &output);
 
 		printf("OUTPUT2: %s", output.output_string);
 	}

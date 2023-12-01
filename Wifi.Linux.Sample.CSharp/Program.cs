@@ -29,8 +29,8 @@ namespace Wifi.Linux.Sample.CSharp
         [StructLayout(LayoutKind.Sequential)]
         public struct OUTPUT
         {
-            [MarshalAs(UnmanagedType.LPArray)]
-            public byte[] output_string;
+            [MarshalAs(UnmanagedType.LPStr)]
+            public string output_string;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -92,7 +92,7 @@ namespace Wifi.Linux.Sample.CSharp
 
             OUTPUT output = new OUTPUT();
             ExecuteCommand("wpa_cli scan -i wlan0", ref output);
-            Console.WriteLine("Execute called : " + System.Text.Encoding.UTF8.GetString(output.output_string));
+            Console.WriteLine("Execute called : " + output.output_string);// System.Text.Encoding.UTF8.GetString(output.output_string));
 
 
             //SCAN scan = new SCAN();

@@ -11,7 +11,7 @@ typedef struct {
 	unsigned char* output_string;
 } OUTPUT;
 
-int ProcessCommand(const char* command, OUTPUT* output);
+int ExecuteCommand(const char* command, OUTPUT* output);
 
 
 char* qx(char** cmd, int inc_stderr);
