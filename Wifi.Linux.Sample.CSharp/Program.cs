@@ -3,6 +3,12 @@ using System.Runtime.InteropServices;
 
 namespace Wifi.Linux.Sample.CSharp
 {
+    public class Wifi
+    {
+        public required string BSSID { get; set; }
+        public required string SSID { get; set; }
+    }
+
     internal class Program
     {
         #region Interop  
@@ -96,16 +102,65 @@ namespace Wifi.Linux.Sample.CSharp
             Console.WriteLine("Press a key to start");
             Console.ReadLine();
 
-            //var s = exec("wpa_cli scan -i wlan0");
-            //Console.WriteLine(s);
-
-            //s = exec("wpa_cli scanresult");
-            //Console.WriteLine(s);
-
             OUTPUT output = new OUTPUT();
             ExecuteCommand("wpa_cli scan -i wlan0", ref output);
-            Console.WriteLine("Execute called : " + output.output_string);// System.Text.Encoding.UTF8.GetString(output.output_string));
+            Console.WriteLine("Execute called : " + output.output_string);
 
+            ExecuteCommand("wpa_cli scan_results -i wlan0", ref output);
+            Console.WriteLine("Execute called : " + output.output_string);
+
+
+            var lines = output.output_string.Split('\n');
+
+            string[] titles = new string[4];
+            string[][] wifiLines = new string[20][];
+
+            int i = 0;
+            foreach (var line in lines)
+            {
+                if (i == 0)
+                    titles = line.Split(" / ");
+                else
+                {
+                    wifiLines[i - 1] = (line.Split("\t"));
+                }
+
+                i++;
+            }
+
+            Console.WriteLine("Titles: " + string.Join(" ", titles));
+
+            List<Wifi> wifis = new List<Wifi>();
+
+            foreach (var wifi in wifiLines)
+            {
+                if (wifi?.Length > 0)
+                {
+                    wifis.Add(new Wifi { BSSID = wifi[0], SSID = wifi.Last() });
+                    Console.WriteLine(wifi.Last());
+                }
+            }
+
+            var selectedWifi = wifis.FirstOrDefault(e => e.SSID.Contains("Guillaume"));
+
+            if (selectedWifi != null)
+            {
+                //ExecuteCommand("sudo chmod +x /etc/wpa_supplicant.conf", ref output);
+                //Console.WriteLine("Execute called : " + output.output_string);
+
+                //ExecuteCommand($"sudo wpa_passphrase {selectedWifi} mypassword > /etc/wpa_supplicant.conf", ref output);
+                //Console.WriteLine("Execute called : " + output.output_string);
+
+                ExecuteCommand("wpa_cli add_network -i wlan0", ref output);
+                Console.WriteLine("Execute called : " + output.output_string);
+
+                ExecuteCommand($"wpa_cli set_network {output.output_string.Replace("\n", "")} ssid '\"{selectedWifi.SSID}\"' -i wlan0", ref output);
+                Console.WriteLine("Execute called : " + output.output_string);
+            }
+            else
+            {
+                Console.WriteLine("Not found");
+            }
 
             //SCAN scan = new SCAN();
             //var w = ScanWifis(ref scan);

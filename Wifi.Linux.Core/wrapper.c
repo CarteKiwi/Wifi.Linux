@@ -135,9 +135,9 @@ int ExecuteCommand(const char* command, OUTPUT* output)
 
 	if (tokens != NULL) {
 		char* argv[num_tokens + 1];
-		printf("Number of tokens: %d\n", num_tokens);
+		//printf("Number of tokens: %d\n", num_tokens);
 		for (int i = 0; i < num_tokens; i++) {
-			printf("Token %d: %s\n", i + 1, tokens[i]);
+			//printf("Token %d: %s\n", i + 1, tokens[i]);
 			argv[i] = tokens[i];
 		}
 
