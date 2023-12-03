@@ -69,6 +69,36 @@ char** split(char** argv, int* argc, char* string, const char delimiter)
 	*argc = 0;
 	do
 	{
+		if (*string && (*string != delimiter))
+		{
+			argv[(*argc)++] = string;
+		}
+
+		while (*string && *string != delimiter || hasQuote == 1)
+		{
+			if (*string == quote)
+				hasQuote = 1 - hasQuote;
+
+			string++;
+		}
+
+		if (*string)
+		{
+			*string++ = 0;
+		}
+
+	} while (*string);
+	return argv;
+}
+
+char** splitDash(char** argv, int* argc, char* string, const char delimiter)
+{
+	const char quote = '"';
+	int hasQuote = 0;
+
+	*argc = 0;
+	do
+	{
 
 		/*if (*string && (*string != delimiter))
 		{*/
@@ -98,6 +128,7 @@ char** split(char** argv, int* argc, char* string, const char delimiter)
 	} while (*string);
 	return argv;
 }
+
 
 char* qx(char** cmd) {
 	int stdout_fds[2];
@@ -153,7 +184,7 @@ int ExecuteCommand(const char* command, OUTPUT* output)
 	char* tokens[20];
 
 	int num_tokens;
-	split(tokens, &num_tokens, command, '-');
+	split(tokens, &num_tokens, command, ' ');
 
 	if (tokens != NULL) {
 		char* argv[num_tokens + 1];

@@ -380,6 +380,12 @@ namespace Wifi.Linux.Sample.CSharp
                 //ExecuteCommand("sudo chmod +x /etc/wpa_supplicant.conf", ref output);
                 //Console.WriteLine("Execute called : " + output.output_string);
 
+                ExecuteCommand("ip link set wlan0 down", ref output);
+                Console.WriteLine("Execute called : " + output.output_string);
+
+                ExecuteCommand("ip link set wlan0 up", ref output);
+                Console.WriteLine("Execute called : " + output.output_string);
+
                 //WORKING
                 ExecuteCommand($"wpa_supplicant -i wlan0 -c < wpa_passphrase \"{selectedWifi.SSID}\" \"0123456789\"", ref output);
                 Console.WriteLine("Execute called : " + output.output_string);
