@@ -17,14 +17,14 @@ int main(void) {
 	{
 		printf("ESSID: %s", scanResult->scans[j]->b.essid);
 	}*/
-	char cmd[] = "wpa_cli scan -i wlan0";
+	char cmd[] = "wpa_passphrase -i \"iPhone de Guillaume\" 0123456789";
 
 	OUTPUT output;
 	int res = ExecuteCommand(cmd, &output);
 
 	printf("OUTPUT: %s", output.output_string);
 
-	char tmp = *output.output_string;
+	/*char tmp = *output.output_string;
 
 	if (strcmp(&tmp, "OK"))
 	{
@@ -32,7 +32,7 @@ int main(void) {
 		int res = ExecuteCommand(cmd, &output);
 
 		printf("OUTPUT2: %s", output.output_string);
-	}
+	}*/
 
 	exit(0);
 }

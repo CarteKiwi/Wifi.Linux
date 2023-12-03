@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Wifi.Linux.Sample.CSharp": {
+      "commandName": "Project"
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    }
+  }
+}

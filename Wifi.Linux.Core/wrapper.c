@@ -63,15 +63,37 @@ int ScanWifis(SCAN* scan) {
 
 char** split(char** argv, int* argc, char* string, const char delimiter)
 {
+	const char quote = '"';
+	int hasQuote = 0;
+
 	*argc = 0;
 	do
 	{
-		if (*string && (*string != delimiter))
+
+		/*if (*string && (*string != delimiter))
+		{*/
+		argv[(*argc)++] = string;
+		//}
+		if (*string && *string == delimiter)
 		{
-			argv[(*argc)++] = string;
+			string++;
+
 		}
-		while (*string && *string != delimiter) string++;
-		if (*string) *string++ = 0;
+
+		while (*string && *string != delimiter || hasQuote == 1)
+		{
+			if (*string == quote)
+				hasQuote = 1 - hasQuote;
+
+			string++;
+		}
+
+		if (*string)
+		{
+			if (*string && *string == delimiter)
+				string--;
+			*string++ = 0;
+		}
 
 	} while (*string);
 	return argv;
@@ -131,13 +153,13 @@ int ExecuteCommand(const char* command, OUTPUT* output)
 	char* tokens[20];
 
 	int num_tokens;
-	split(tokens, &num_tokens, command, ' ');
+	split(tokens, &num_tokens, command, '-');
 
 	if (tokens != NULL) {
 		char* argv[num_tokens + 1];
-		//printf("Number of tokens: %d\n", num_tokens);
+		printf("Number of tokens: %d\n", num_tokens);
 		for (int i = 0; i < num_tokens; i++) {
-			//printf("Token %d: %s\n", i + 1, tokens[i]);
+			printf("Token %d: %s\n", i + 1, tokens[i]);
 			argv[i] = tokens[i];
 		}
 
