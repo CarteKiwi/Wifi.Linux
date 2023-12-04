@@ -4,6 +4,33 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Title>Wifi.Linux</Title>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Description>Wifi Client on Linux for .NET (C#) =&gt; it's wrapping wpa_supplicant and use Process (Execvp) to execute command on host.
+This library enable you to retrieve awailable Wifis on Linux in your dotnet app (hosted on Linux).</Description>
+    <Authors>G.D.M</Authors>
+    <RepositoryUrl>https://github.com/CarteKiwi/Wifi.Linux</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon_small.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/CarteKiwi/Wifi.Linux</PackageProjectUrl>
+    <Copyright>Guillaume DEMICHELI</Copyright>
+    <PackageTags>wifi, wpa, wpa_supplicant, iwconfig, linux</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\icon_small.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
