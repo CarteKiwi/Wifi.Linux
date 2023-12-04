@@ -160,10 +160,10 @@ namespace Wifi.Linux
 
             foreach (var wifi in wifiLines)
             {
-                if (wifi?.Length > 0)
+                if (wifi?.Length > 1)
                 {
-                    wifis.Add(new Wifi { BSSID = wifi[0], SSID = wifi.Last() });
-                    Console.WriteLine(wifi.Last());
+                    wifis.Add(new Wifi { Bssid = wifi[0], Frequency = wifi[1], Signal = wifi[2], Flags = wifi[3], Ssid = wifi[4] });
+                    Console.WriteLine(string.Join(" ", wifi));
                 }
             }
 

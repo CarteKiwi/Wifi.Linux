@@ -10,11 +10,11 @@
 
                 var wifis = await wpa.ScanAsync();
 
-                var selectedWifi = wifis.FirstOrDefault(e => e.SSID.Contains("Guillaume"));
+                var selectedWifi = wifis.FirstOrDefault(e => e.Ssid.Contains("Guillaume"));
 
                 if (selectedWifi != null)
                 {
-                    if (await wpa.SetAsync(selectedWifi.SSID))
+                    if (await wpa.SetAsync(selectedWifi.Ssid))
                     {
                         // Ask for Password
                         if (await wpa.TryEnableAsync("0123456789"))
