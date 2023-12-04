@@ -9,16 +9,10 @@
 
   <ItemGroup>
     <PackageReference Include="System.Runtime" Version="4.3.1" />
-    <PackageReference Include="Tmds.DBus" Version="0.15.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="libWifi.Linux.Core.so">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="mirror_wpa_supplicant.conf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <ProjectReference Include="..\Wifi.Linux\Wifi.Linux.csproj" />
   </ItemGroup>
 
 </Project>

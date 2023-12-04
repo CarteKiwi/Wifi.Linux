@@ -176,15 +176,6 @@ char* qx(char** cmd) {
 	return out;
 }
 
-int SystemCommand(const char* command, OUTPUT* output)
-{
-	system(command);
-
-	//char prompt = "OK System";
-	//char* out = prompt;
-	//output->output_string = out;
-}
-
 int ExecuteCommand(const char* command, OUTPUT* output)
 {
 	printf("Processing command...\n");

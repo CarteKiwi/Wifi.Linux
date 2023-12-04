@@ -77,11 +77,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Wifi.Linux.Core\Wifi.Linux.Core.vcxproj">
-      <Project>{bf15e798-4383-404a-95e2-23fde194ffe2}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
