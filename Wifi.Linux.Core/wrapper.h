@@ -9,6 +9,7 @@ typedef struct {
 } OUTPUT;
 
 int ExecuteCommand(const char* command, OUTPUT* output);
+int SystemCommand(const char* command, OUTPUT* output);
 
 
 char* qx(char** cmd);

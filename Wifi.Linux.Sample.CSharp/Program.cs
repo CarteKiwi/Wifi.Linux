@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using Tmds.DBus;
 
 [assembly: InternalsVisibleTo(Tmds.DBus.Connection.DynamicAssemblyName)]
@@ -230,6 +232,10 @@ namespace Wifi.Linux.Sample.CSharp
         [return: MarshalAs(UnmanagedType.I4)]
         public static extern int ExecuteCommand(string command, ref OUTPUT output);
 
+        [DllImport("libWifi.Linux.Core.so", EntryPoint = "SystemCommand")]
+        [return: MarshalAs(UnmanagedType.I4)]
+        public static extern int SystemCommand(string command, ref OUTPUT output);
+
 
         [DllImport("libWifi.Linux.Core.so", EntryPoint = "ScanWifis")]
         [return: MarshalAs(UnmanagedType.I4)]
@@ -305,114 +311,320 @@ namespace Wifi.Linux.Sample.CSharp
         };
         #endregion
 
+        string sblock = "";
+
+        private async Task<string> Exec(string exe, string args)
+        {
+            Console.WriteLine(exe + " " + args);
+
+            var sb = new StringBuilder();
+            var startinfo = new ProcessStartInfo(exe, args)
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            };
+            var ret = new Process
+            {
+                StartInfo = startinfo,
+                EnableRaisingEvents = true
+            };
+
+            ret.OutputDataReceived += (sender, eventArgs) =>
+            {
+                lock (sblock)
+                {
+                    var data = eventArgs.Data;
+                    if (string.IsNullOrEmpty(data))
+                    {
+                        return;
+                    }
+                    sb.AppendLine(data);
+                    Debug.Write(data);
+                }
+            };
+
+            ret.ErrorDataReceived += (sender, eventArgs) =>
+            {
+                lock (sblock)
+                {
+                    var data = eventArgs.Data;
+                    if (string.IsNullOrWhiteSpace(data))
+                    {
+                        return;
+                    }
+                    sb.AppendLine("ERROR: " + data);
+                    Debug.Write(data);
+                }
+            };
+            Debug.Assert(ret != null, "ret != null");
+
+            ret.Start();
+            ret.BeginOutputReadLine();
+            ret.BeginErrorReadLine();
+            await ret.WaitForExitAsync();
+
+            lock (sblock)
+            {
+                return (sb.ToString());
+            }
+        }
+
+        public async Task<string> ExecuteCommandAsync(string command)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            Process proc = new Process();
+            proc.StartInfo.FileName = "/bin/bash";
+            proc.StartInfo.Arguments = "-c \" " + command + " \"";
+            proc.StartInfo.UseShellExecute = true;
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.Start();
+            await proc.WaitForExitAsync();
+
+            while (!proc.StandardOutput.EndOfStream)
+            {
+                stringBuilder.AppendLine(proc.StandardOutput.ReadLine());
+                Console.WriteLine(proc.StandardOutput.ReadLine());
+            }
+
+            return stringBuilder.ToString();
+        }
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Press a key to start");
-            Console.ReadLine();
-
-            //Task.Run(async () =>
-            //{
-            //    var connection = new Connection(Address.System);
-            //    await connection.ConnectAsync();
-
-            //    //var systemConnection = Connection.System;
-            //    Console.WriteLine("1");
-            //    var networkManager = connection.CreateProxy<IWpaSupplicant1>("fi.w1.wpa_supplicant1", "/fi/w1/wpa_supplicant1");
-
-            //    //var ii = await networkManager.CreateInterfaceAsync(new Dictionary<string, object> { { "Ifname", "wlan0" } });
-            //    //Console.WriteLine($"Interface : {ii.ToString()}");
-            //    //var ii2 = ii;
-            //    var prop = await networkManager.GetAsync<ObjectPath[]>("Interfaces");
-            //    Console.WriteLine(prop.Length);
-            //    Console.WriteLine("2");
-
-
-
-            //    var tt = await networkManager.GetInterfaceAsync("wlan0");
-            //    var t = tt;
-
-
-            //}).Wait();
-
-            OUTPUT output = new OUTPUT();
-            ExecuteCommand("wpa_cli -i wlan0 scan", ref output);
-            Console.WriteLine("Execute called : " + output.output_string);
-
-            ExecuteCommand("wpa_cli scan_results -i wlan0", ref output);
-            Console.WriteLine("Execute called : " + output.output_string);
-
-
-            var lines = output.output_string.Split('\n');
-
-            string[] titles = new string[4];
-            string[][] wifiLines = new string[20][];
-
-            int i = 0;
-            foreach (var line in lines)
+            Task.Run(async () =>
             {
-                if (i == 0)
-                    titles = line.Split(" / ");
+                Program p = new Program();
+
+                var oo1 = await p.Exec("wpa_cli", "scan -i wlan0");
+                Console.WriteLine(oo1);
+                var oo = await p.Exec("wpa_cli", "scan_results -i wlan0");
+                //Console.WriteLine(oo);
+
+                var lines = oo.Split('\n');
+
+                string[] titles = new string[4];
+                string[][] wifiLines = new string[30][];
+
+                int i = 0;
+                foreach (var line in lines)
+                {
+                    if (i == 0)
+                        titles = line.Split(" / ");
+                    else
+                    {
+                        wifiLines[i - 1] = (line.Split("\t"));
+                    }
+
+                    i++;
+                }
+
+                Console.WriteLine("Titles: " + string.Join(" ", titles));
+
+                List<Wifi> wifis = new List<Wifi>();
+
+                foreach (var wifi in wifiLines)
+                {
+                    if (wifi?.Length > 0)
+                    {
+                        wifis.Add(new Wifi { BSSID = wifi[0], SSID = wifi.Last() });
+                        Console.WriteLine(wifi.Last());
+                    }
+                }
+
+                var selectedWifi = wifis.FirstOrDefault(e => e.SSID.Contains("Guillaume"));
+
+                if (selectedWifi != null)
+                {
+                    //var o3 = await p.Exec("wpa_passphrase", $"\"{selectedWifi.SSID}\" \"0123456789\"");
+                    //Console.WriteLine(o3);
+
+                    //File.WriteAllText("mirror_wpa_supplicant.conf", o3);
+
+                    var o3 = await p.Exec("wpa_cli", "remove_network all");
+                    Console.WriteLine("Execute called : " + o3);
+
+                    o3 = await p.Exec("wpa_cli", "add_network");
+                    Console.WriteLine("Execute called : " + o3);
+
+                    var indice = o3.Split("\n")[1].Replace("\n", "");
+
+                    o3 = await p.Exec($"/bin/bash", $"-c \"wpa_cli set_network {indice} ssid '\\\"{selectedWifi.SSID}\\\"'\"");
+                    Console.WriteLine("Execute called : " + o3);
+
+                    //o3 = await p.Exec("wpa_cli", $"set_network {indice} key_mgmt WPA-PSK");
+                    //Console.WriteLine("Execute called : " + o3);
+
+                    var pwd = "0123456789";
+                    o3 = await p.Exec($"/bin/bash", $"-c \"wpa_cli set_network {indice} psk '\\\"{pwd}\\\"'\"");
+                    Console.WriteLine("Execute called : " + o3);
+
+                    o3 = await p.Exec("wpa_cli", $"enable_network {indice}");
+                    Console.WriteLine("Execute called : " + o3);
+
+                    o3 = await p.Exec("wpa_cli", $"select_network {indice}");
+                    Console.WriteLine("Execute called : " + o3);
+
+                    o3 = await p.Exec("wpa_cli", $"save_config");
+                    Console.WriteLine("Execute called : " + o3);
+
+                    o3 = await p.Exec("wpa_cli", $"reconfigure");
+                    Console.WriteLine("Execute called : " + o3);
+
+                    o3 = await p.Exec("reboot", $"");
+                    Console.WriteLine("Execute called : " + o3);
+
+                    //var output = await p.Exec("wpa_supplicant", $"-i wlan0 -c mirror_wpa_supplicant.conf");
+                    //Console.WriteLine(output);
+
+                    //output = await p.Exec($"dhclient", "-r");
+                    //Console.WriteLine("dhclient called : " + output);
+
+                    //output = await p.Exec("dhclient", "wlan0");
+                    //Console.WriteLine("dhclient 2 called : " + output);
+
+                }
                 else
                 {
-                    wifiLines[i - 1] = (line.Split("\t"));
+                    Console.WriteLine("Not found");
                 }
 
-                i++;
-            }
+            }).Wait();
 
-            Console.WriteLine("Titles: " + string.Join(" ", titles));
-
-            List<Wifi> wifis = new List<Wifi>();
-
-            foreach (var wifi in wifiLines)
-            {
-                if (wifi?.Length > 0)
-                {
-                    wifis.Add(new Wifi { BSSID = wifi[0], SSID = wifi.Last() });
-                    Console.WriteLine(wifi.Last());
-                }
-            }
-
-            var selectedWifi = wifis.FirstOrDefault(e => e.SSID.Contains("Guillaume"));
-
-            if (selectedWifi != null)
-            {
-                //ExecuteCommand("sudo chmod +x /etc/wpa_supplicant.conf", ref output);
-                //Console.WriteLine("Execute called : " + output.output_string);
-
-                ExecuteCommand("ip link set wlan0 down", ref output);
-                Console.WriteLine("Execute called : " + output.output_string);
-
-                ExecuteCommand("ip link set wlan0 up", ref output);
-                Console.WriteLine("Execute called : " + output.output_string);
-
-                //WORKING
-                ExecuteCommand($"wpa_supplicant -i wlan0 -c < wpa_passphrase \"{selectedWifi.SSID}\" \"0123456789\"", ref output);
-                Console.WriteLine("Execute called : " + output.output_string);
-
-                //ExecuteCommand($"wpa_passphrase \"{selectedWifi.SSID}\" \"0123456789\" > temp.conf", ref output);
-                //Console.WriteLine("Execute called : " + output.output_string);
-
-                //ExecuteCommand($"wpa_supplicant -i wlan0 -c /etc/temp.conf", ref output);
-                //Console.WriteLine("Execute called : " + output.output_string);
-
-                ExecuteCommand($"dhclient -r", ref output);
-                Console.WriteLine("Execute called : " + output.output_string);
-
-                ExecuteCommand($"dhclient wlan0", ref output);
-                Console.WriteLine("Execute called : " + output.output_string);
+            //    var command = ("wpa_cli -i wlan0 scan");
 
 
-                //ExecuteCommand("wpa_cli add_network -i wlan0", ref output);
-                //Console.WriteLine("Execute called : " + output.output_string);
+            //Process proc = new Process();
+            //proc.StartInfo.FileName = "/bin/bash";
+            //proc.StartInfo.Arguments = "-c \" " + command + " \"";
+            //proc.StartInfo.UseShellExecute = false;
+            //proc.StartInfo.RedirectStandardOutput = true;
+            //proc.OutputDataReceived += Proc_OutputDataReceived;
+            //proc.Start();
 
-                //ExecuteCommand($"wpa_cli set_network {output.output_string.Replace("\n", "")} ssid \"{selectedWifi.SSID}\" -i wlan0", ref output);
-                //Console.WriteLine("Execute called : " + output.output_string);
-            }
-            else
-            {
-                Console.WriteLine("Not found");
-            }
+            //while (!proc.StandardOutput.EndOfStream)
+            //{
+            //    Console.WriteLine(proc.StandardOutput.ReadLine());
+            //}
+
+
+
+
+
+
+            //Console.WriteLine("Press a key to start");
+            //Console.ReadLine();
+
+            ////Task.Run(async () =>
+            ////{
+            ////    var connection = new Connection(Address.System);
+            ////    await connection.ConnectAsync();
+
+            ////    //var systemConnection = Connection.System;
+            ////    Console.WriteLine("1");
+            ////    var networkManager = connection.CreateProxy<IWpaSupplicant1>("fi.w1.wpa_supplicant1", "/fi/w1/wpa_supplicant1");
+
+            ////    //var ii = await networkManager.CreateInterfaceAsync(new Dictionary<string, object> { { "Ifname", "wlan0" } });
+            ////    //Console.WriteLine($"Interface : {ii.ToString()}");
+            ////    //var ii2 = ii;
+            ////    var prop = await networkManager.GetAsync<ObjectPath[]>("Interfaces");
+            ////    Console.WriteLine(prop.Length);
+            ////    Console.WriteLine("2");
+
+
+
+            ////    var tt = await networkManager.GetInterfaceAsync("wlan0");
+            ////    var t = tt;
+
+
+            ////}).Wait();
+
+            //OUTPUT output = new OUTPUT();
+            //ExecuteCommand("wpa_cli -i wlan0 scan", ref output);
+            //Console.WriteLine("Execute called : " + output.output_string);
+
+            //ExecuteCommand("wpa_cli scan_results -i wlan0", ref output);
+            //Console.WriteLine("Execute called : " + output.output_string);
+
+
+            //var lines = output.output_string.Split('\n');
+
+            //string[] titles = new string[4];
+            //string[][] wifiLines = new string[20][];
+
+            //int i = 0;
+            //foreach (var line in lines)
+            //{
+            //    if (i == 0)
+            //        titles = line.Split(" / ");
+            //    else
+            //    {
+            //        wifiLines[i - 1] = (line.Split("\t"));
+            //    }
+
+            //    i++;
+            //}
+
+            //Console.WriteLine("Titles: " + string.Join(" ", titles));
+
+            //List<Wifi> wifis = new List<Wifi>();
+
+            //foreach (var wifi in wifiLines)
+            //{
+            //    if (wifi?.Length > 0)
+            //    {
+            //        wifis.Add(new Wifi { BSSID = wifi[0], SSID = wifi.Last() });
+            //        Console.WriteLine(wifi.Last());
+            //    }
+            //}
+
+            //var selectedWifi = wifis.FirstOrDefault(e => e.SSID.Contains("Guillaume"));
+
+            //if (selectedWifi != null)
+            //{
+            //    //ExecuteCommand("sudo chmod +x /etc/wpa_supplicant.conf", ref output);
+            //    //Console.WriteLine("Execute called : " + output.output_string);
+            //    //SystemCommand("ee", ref output);
+            //    //Console.WriteLine("System called");
+            //    //Console.WriteLine("System called : " + output.output_string);
+
+            //    //ExecuteCommand("sudo ip link set wlan0 down", ref output);
+            //    //Console.WriteLine("Execute called : " + output.output_string);
+
+            //    //ExecuteCommand("sudo ip link set wlan0 up", ref output);
+            //    //Console.WriteLine("Execute called : " + output.output_string);
+
+            //    //WORKING
+            //    ExecuteCommand($"wpa_supplicant -i wlan0 -c < wpa_passphrase \"{selectedWifi.SSID}\" \"0123456789\"", ref output);
+            //    Console.WriteLine("Execute called : " + output.output_string);
+
+            //    //ExecuteCommand($"wpa_passphrase \"{selectedWifi.SSID}\" \"0123456789\" > temp.conf", ref output);
+            //    //Console.WriteLine("Execute called : " + output.output_string);
+
+            //    //ExecuteCommand($"wpa_supplicant -i wlan0 -c /etc/temp.conf", ref output);
+            //    //Console.WriteLine("Execute called : " + output.output_string);
+
+            //    ExecuteCommand($"dhclient -r", ref output);
+            //    Console.WriteLine("Execute called : " + output.output_string);
+
+            //    SystemCommand("dhclient wlan0", ref output);
+            //    Console.WriteLine("Execute called : " + output.output_string);
+
+            //    //ExecuteCommand($"dhclient wlan0", ref output);
+            //    //Console.WriteLine("Execute called : " + output.output_string);
+
+
+            //    //ExecuteCommand("wpa_cli add_network -i wlan0", ref output);
+            //    //Console.WriteLine("Execute called : " + output.output_string);
+
+            //    //ExecuteCommand($"wpa_cli set_network {output.output_string.Replace("\n", "")} ssid \"{selectedWifi.SSID}\" -i wlan0", ref output);
+            //    //Console.WriteLine("Execute called : " + output.output_string);
+            //}
+            //else
+            //{
+            //    Console.WriteLine("Not found");
+            //}
 
             //SCAN scan = new SCAN();
             //var w = ScanWifis(ref scan);
@@ -425,6 +637,12 @@ namespace Wifi.Linux.Sample.CSharp
             //        Console.WriteLine("ESSID: " + s.b.essid + " & Name: " + s.b.name);
             //    }
             //}
+        }
+
+        private static void Proc_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            Console.WriteLine(e.Data);
+
         }
     }
 }
