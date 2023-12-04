@@ -7,7 +7,7 @@ This library allows you to connect WIFI on Linux (wrap commands like wpa_cli of 
 
 
 
-SCENARIO
+## SCENARIO
 
 You need to connect WIFI to you server app using a client app, connected via Bluetooth.
 - Server app running on a Raspberry Pi (Debian) (with or without UI)
@@ -19,9 +19,7 @@ You need to connect WIFI to you server app using a client app, connected via Blu
 - Host initiate connection (ask for password, connect and reboot)
 
 
-
-
-STEPS for SCENARIO
+### SCENARIO's STEPS
 
 (Bluetooth.Linux) - Initialize BLE      
 
@@ -43,3 +41,26 @@ STEPS for SCENARIO
 
 (Wifi.Linux) - (Linux) Connect to selected WIFI                        
 
+## HOW TO USE
+```C#
+// Define targeted interface
+Wpa wpa = new Wpa("wlan0");
+```
+
+```C#
+// Retrieve available WIFIs
+var wifis = await wpa.ScanAsync();
+```
+
+```C#
+// Set targeted SSID
+if (await wpa.SetAsync(selectedWifi.Ssid))
+{
+    // Try enable using provided password
+    if (await wpa.TryEnableAsync("0123456789"))
+    {
+	// Save config and reboot host
+        await wpa.SaveAndRebootAsync();
+    }
+}
+```
